@@ -1,7 +1,8 @@
 import java.util.*;
 
 public class Player {
-    final int MAX_DEPTH = 3;
+    final int MAX_DEPTH = 5;
+    GameState bestpossiblestate = null;
 
     /**
      * Performs a move
@@ -16,9 +17,12 @@ public class Player {
     public GameState play(final GameState gameState, final Deadline deadline) {
         Vector<GameState> nextStates = new Vector<GameState>();
         gameState.findPossibleMoves(nextStates);
-        GameState bestpossiblestate = null;
-        minimax(gameState, gameState.getNextPlayer(), bestpossiblestate, 0);
-        return bestpossiblestate;
+        minimax(gameState, gameState.getNextPlayer(), 0, Integer.MIN_VALUE, Integer.MAX_VALUE);
+        if(bestpossiblestate != null){
+            return bestpossiblestate;
+        }else{
+            return gameState;
+        }
 
         /**
          * Here you should write your algorithms to get the best next move, i.e.
@@ -28,8 +32,8 @@ public class Player {
         // return nextStates.elementAt(random.nextInt(nextStates.size()));
     }
 
-    public int minimax(GameState gameState, int player, GameState bestpossiblestate,
-                    int currentDepth){
+    public int minimax(GameState gameState, int player,
+                    int currentDepth, int alpha, int beta){
 
         Vector<GameState> nextStates = new Vector<GameState>();
         gameState.findPossibleMoves(nextStates);
@@ -50,20 +54,31 @@ public class Player {
         if(player == 1){ //player A
             int bestpossible = Integer.MIN_VALUE;
             for(GameState nextstate : nextStates){
-                int v = minimax(nextstate, nextstate.getNextPlayer(), null, currentDepth);
-                if(v > bestpossible){
+                //PRUNING?
+
+                int v = minimax(nextstate, nextstate.getNextPlayer(), currentDepth, alpha, beta);
+                if(bestpossible < v && currentDepth == 1){
                     bestpossiblestate = nextstate;
-                    bestpossible = v;
+                }
+                bestpossible = bestpossible > v ? bestpossible : v;
+                alpha = alpha > bestpossible ? alpha : bestpossible;
+                if(beta <= alpha){
+                    return bestpossible;
                 }
             }
             return bestpossible;
         }else{
             int bestpossible = Integer.MAX_VALUE;
             for(GameState nextstate : nextStates){
-                int v = minimax(nextstate, nextstate.getNextPlayer(), null, currentDepth);
-                if(v < bestpossible){
+
+                int v = minimax(nextstate, nextstate.getNextPlayer(), currentDepth, alpha, beta);
+                if(bestpossible > v && currentDepth == 1){
                     bestpossiblestate = nextstate;
-                    bestpossible = v;
+                }
+                bestpossible = bestpossible < v ? bestpossible : v;
+                beta = beta < bestpossible ? beta : bestpossible;
+                if(beta <= alpha){
+                    return bestpossible;
                 }
             }
             return bestpossible;
